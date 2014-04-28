@@ -27,7 +27,7 @@ def GetGuangzhu(opener,id):
     url = 'http://www.douban.com/people/'+id+'/contacts';
     content = opener.open(url).read();
     content = content.decode('utf8','ignore').encode('gbk','ignore');
-    regexp = r'<a href="((?!href).*?)" class="nbg"><img src=.*?class="m_sub_img" alt="(.*?)"/></a></dt>';
+    regexp = r'<a href="http:\/\/www.douban.com\/people\/([-\.\w]+)\/" class="nbg">.*alt="(.+)"';
     guanzhulist = GetRE(content,regexp);
     return guanzhulist
 
@@ -38,41 +38,37 @@ def logindouban():
     opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(cookie))
     
     params = {
-    "form_email":"XXXX@qq.com",
-    "form_password":"XXXXXXX",
-    "source":"index_nav" #没有的话登录不成功
+    "form_email":"xxx@qq.com",
+    "form_password":"xxx",
+    "source":"index_nav" 
     }
     
-    #从首页提交登录
     response=opener.open(loginurl, urllib.urlencode(params))
     
-    #验证成功跳转至登录页
+    html = ''
     if response.geturl() == "https://www.douban.com/accounts/login":
         html=response.read()
   
-    	#验证码图片地址
+    #如果需要验证码
     imgurl=re.search('<img id="captcha_image" src="(.+?)" alt="captcha" class="captcha_image"/>', html)
     if imgurl:
-        url=imgurl.group(1)
-        res=urllib.urlretrieve(url, 'v.jpg')
-        captcha=re.search('<input type="hidden" name="captcha-id" value="(.+?)"/>' ,html)
+        url = imgurl.group(1)
+        urllib.urlretrieve(url, 'captcha.jpg')
+        captcha = re.search('<input type="hidden" name="captcha-id" value="(.+?)"/>' ,html)
         if captcha:
-            vcode=raw_input('Input The Englished world:')
+            vcode = raw_input('Input The Englished world:')
             params["captcha-solution"] = vcode
             params["captcha-id"] = captcha.group(1)
             params["user_login"] = "登录"
-        response=opener.open(loginurl, urllib.urlencode(params))
+        response = opener.open(loginurl, urllib.urlencode(params))
     return opener
 
-
-opener = logindouban()  
-guanzhu = GetGuangzhu(opener,'lowsong-e');
-f = open('a.txt','w');
-for item in guanzhu:
-    f.write(item[1]);
-    f.write(":\n");
-    f.write(item[0]+"\n\n\n");
-f.close();
+if __name__ == '__main__':
+    seed = 'MovieL'  #种子人物
+    opener = logindouban()  
+    guanzhu = GetGuangzhu(opener,seed);
+    f = open('a.txt','w');
+    for item in guanzhu:
+        f.write('%s:%s\n'%(item[1],item[0]))
+    f.close();
     
-
-
