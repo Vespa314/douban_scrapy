@@ -5,18 +5,53 @@ Created on Wed Apr 23 16:43:58 2014
 @author: Administrator
 """
 import re
-import urllib2
 import urllib
+import urllib2
 import time
 import json
+
+class Book:
+    def __init__(self,JsonInfo):
+        if JsonInfo.has_key('title'):
+            self.Name = JsonInfo['title'];
+        if JsonInfo.has_key('rating') and JsonInfo['rating'].has_key('average'):
+            self.Rate = JsonInfo['rating']['average']
+        if JsonInfo.has_key('rating') and JsonInfo['rating'].has_key('numRaters'):
+            self.RateNum = JsonInfo['rating']['numRaters']
+        if JsonInfo.has_key('pages'):
+            self.Page = JsonInfo['pages']
+        if JsonInfo.has_key('price'):
+            self.Price = JsonInfo['price']
+        if JsonInfo.has_key('pubdate'):
+            self.Pubdate = JsonInfo['pubdate']
+        if JsonInfo.has_key('publisher'):
+            self.Publisher = JsonInfo['publisher']
+        if JsonInfo.has_key('id'):
+            self.Id = JsonInfo['id']
+    Name = None
+    Rate = None
+    RateNum = None
+    Page = None
+    Price = None
+    Pubdate = None;
+    Publisher = None;
+    Id = None
 
 def GetRE(content,regexp):
     return re.findall(regexp, content)
     
 def GetContent(url):
     headers = {'User-Agent':'Mozilla/5.0 (Windows NT 5.1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/33.0.1750.117 Safari/537.36'}
-    req = urllib2.Request(url = url,headers = headers);   
-    content = urllib2.urlopen(req).read();
+    req = urllib2.Request(url = url,headers = headers);
+    while True:    	
+        flag = 1;
+        try:
+            content = urllib2.urlopen(req).read();
+        except:
+        	flag = 0;
+        	time.sleep(5)
+        if flag == 1:
+        	break;
     return content.decode('utf8','ignore').encode('gbk','ignore');
 
     
@@ -59,12 +94,22 @@ def getBookInfo(id):
     """
     根据API来获取书本信息
     """
-    url = 'https://api.douban.com/v2/book/'+str(id);
+    url = 'https://api.douban.com/v2/book/'+id;
     content = GetContent(url)
-    info = json.loads(content.decode('gbk','ignore').encode('utf8','ignore'))
-    print info['title'].encode('gbk','ignore')
+    JsonInfo = json.loads(content.decode('gbk','ignore').encode('utf8','ignore'))
+    book = Book(JsonInfo);
+    return book
+    
+def WriteItem(fh,book):
+    fh.write('%s\n'%book.Name.encode('gbk','ignore'));
+    fh.write('\tId:%s\n'%book.Id.encode('gbk','ignore'));
+    fh.write('\tRate:%s\n'%book.Rate.encode('gbk','ignore'));
+    fh.write('\tRate Number:%d\n'%book.RateNum);
+    fh.write('\tPrice:%s\n'%book.Price.encode('gbk','ignore'));
+    fh.write('\tPublish Date:%s\n'%book.Pubdate.encode('gbk','ignore'));
+    fh.write('\tPublisher:%s\n\n'%book.Publisher.encode('gbk','ignore'));
 
-if __name__ == "__main__":
+def GetAllIdOfBook():
     taglist = GetAllTagList();
     f = open('BookId.txt','w');
     for tag in taglist:
@@ -73,5 +118,30 @@ if __name__ == "__main__":
         BookIdList = GetBookWithTag(tag)
         for BookId in BookIdList:
             f.write('\t%s\n'%(BookId))
-#            getBookInfo(BookId)
     f.close();
+
+def scrawlAllBook():
+    BookIdList = [];
+    IDListFile = open('BookId.txt','r')
+    for line in IDListFile:
+        id = GetRE(line,r'^\t(\d+)$');
+        if id == []:
+            continue
+        BookIdList.append(id[0])
+    IDListFile.close()
+    BookIdList = list(set(BookIdList))
+    file_h = open('book_detail.txt','a+')
+    for bookid in BookIdList:
+        BookInfo = getBookInfo(bookid);
+        print BookInfo.Id,BookInfo.Name.encode('gbk','ignore')
+        WriteItem(file_h,BookInfo) 
+        time.sleep(2)
+
+
+    
+if __name__ == "__main__":
+    #爬取所有书ID保存到文件中
+#    GetAllIdOfBook()
+    scrawlAllBook()
+
+    
