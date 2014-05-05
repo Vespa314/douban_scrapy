@@ -7,9 +7,7 @@ Created on Wed Apr 02 00:58:10 2014
 
 import sys, time, os, re
 import urllib, urllib2, cookielib
-
-
-	
+import captchaRecognition
 
 def GetRE(content,regexp):
     return re.findall(regexp, content)
@@ -38,8 +36,8 @@ def logindouban():
     opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(cookie))
     
     params = {
-    "form_email":"xxx@qq.com",
-    "form_password":"xxx",
+    "form_email":"zhuce@jiamu.org",
+    "form_password":"qwert12345",
     "source":"index_nav" 
     }
     
@@ -51,21 +49,28 @@ def logindouban():
   
     #如果需要验证码
     imgurl=re.search('<img id="captcha_image" src="(.+?)" alt="captcha" class="captcha_image"/>', html)
-    if imgurl:
+    while imgurl:
         url = imgurl.group(1)
         urllib.urlretrieve(url, 'captcha.jpg')
         captcha = re.search('<input type="hidden" name="captcha-id" value="(.+?)"/>' ,html)
         if captcha:
-            vcode = raw_input('Input The Englished world:')
+            vcode = captchaRecognition.recognition('./captcha.jpg');
+            #print vcode
             params["captcha-solution"] = vcode
             params["captcha-id"] = captcha.group(1)
             params["user_login"] = "登录"
-        response = opener.open(loginurl, urllib.urlencode(params))
+            response = opener.open(loginurl, urllib.urlencode(params))
+            if response.geturl() == 'http://www.douban.com/':
+                break
+            else:
+                response=opener.open(loginurl, urllib.urlencode(params))
+                html=response.read()
+                imgurl=re.search('<img id="captcha_image" src="(.+?)" alt="captcha" class="captcha_image"/>', html)
     return opener
 
 if __name__ == '__main__':
     seed = 'MovieL'  #种子人物
-    opener = logindouban()  
+    opener = logindouban()
     guanzhu = GetGuangzhu(opener,seed);
     f = open('a.txt','w');
     for item in guanzhu:
