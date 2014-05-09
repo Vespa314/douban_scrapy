@@ -16,9 +16,15 @@ from pytesser import *
 #        return self.listdata[y*self.width+x]
 
 def Binarize(img,threshold):
-    img = img.convert('L')
-    table = [0]*threshold+[1]*(256-threshold) 
-    return img.point(table,'1').convert('L')
+    img_G = Image.new('L',img.size,1)
+    w,d = img.size
+    imgdata,imggraydata = img.load(),img_G.load()
+    for x in range(w):
+        for y in range(d):
+            imggraydata[x,y] = 255*(imgdata[x,y][0]>threshold or imgdata[x,y][1]>threshold or imgdata[x,y][2] > threshold)
+    return img_G
+
+
 
 def scrap_img(imgdata,dst,width,heigth,x,y):
     findlist = []
