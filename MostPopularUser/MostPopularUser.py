@@ -36,8 +36,8 @@ def logindouban():
     opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(cookie))
     
     params = {
-    "form_email":"zhuce@jiamu.org",
-    "form_password":"qwert12345",
+    "form_email":"xxx@xxx.org",
+    "form_password":"xxxxxxx",
     "source":"index_nav" 
     }
     
@@ -55,7 +55,6 @@ def logindouban():
         captcha = re.search('<input type="hidden" name="captcha-id" value="(.+?)"/>' ,html)
         if captcha:
             vcode = captchaRecognition.recognition('./captcha.jpg');
-            #print vcode
             params["captcha-solution"] = vcode
             params["captcha-id"] = captcha.group(1)
             params["user_login"] = "登录"
@@ -69,7 +68,7 @@ def logindouban():
     return opener
 
 if __name__ == '__main__':
-    seed = 'MovieL'  #种子人物
+    seed = 'xxxx'  #种子人物
     opener = logindouban()
     guanzhu = GetGuangzhu(opener,seed);
     f = open('a.txt','w');
