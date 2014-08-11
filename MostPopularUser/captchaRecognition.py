@@ -24,6 +24,10 @@ def Binarize(img,threshold):
             imggraydata[x,y] = 255*(imgdata[x,y][0]>threshold or imgdata[x,y][1]>threshold or imgdata[x,y][2] > threshold)
     return img_G
 
+<<<<<<< HEAD
+=======
+
+>>>>>>> c1656bf628ee72c5c7ef091faeddf3c1e5037205
 
 def scrap_img(imgdata,dst,width,heigth,x,y):
     findlist = []
